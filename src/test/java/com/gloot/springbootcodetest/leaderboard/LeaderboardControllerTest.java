@@ -7,6 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.gloot.springbootcodetest.SpringBootComponentTest;
+import com.gloot.springbootcodetest.leaderboards.LeaderboardsEntryEntity;
+import com.gloot.springbootcodetest.leaderboards.LeaderboardsRepository;
+
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +19,12 @@ public class LeaderboardControllerTest extends SpringBootComponentTest {
 
   @Autowired private MockMvc mockMvc;
   @Autowired LeaderboardRepository repository;
+  @Autowired LeaderboardsRepository leaderboardsRepository;
 
   @Test
   void getLeaderboardTest() throws Exception {
-    LeaderboardEntryEntity entity = new LeaderboardEntryEntity("g-looter", 100);
+	LeaderboardsEntryEntity board = leaderboardsRepository.findByName("DEFAULT");
+    LeaderboardEntryEntity entity = new LeaderboardEntryEntity("g-looter", 100, board);
     repository.saveAll(List.of(entity));
 
     mockMvc.perform(get("/api/v1/leaderboard"))

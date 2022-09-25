@@ -3,6 +3,9 @@ package com.gloot.springbootcodetest.leaderboard;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.gloot.springbootcodetest.SpringBootComponentTest;
+import com.gloot.springbootcodetest.leaderboards.LeaderboardsEntryEntity;
+import com.gloot.springbootcodetest.leaderboards.LeaderboardsRepository;
+
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +14,14 @@ public class LeaderboardServiceTest extends SpringBootComponentTest {
 
   @Autowired LeaderboardRepository repository;
   @Autowired LeaderboardService service;
+  @Autowired LeaderboardsRepository leaderboardsRepository;
 
   @Test
   void getLeaderboard() {
+	LeaderboardsEntryEntity board = leaderboardsRepository.findByName("DEFAULT");
     List<LeaderboardEntryEntity> entities = List
-        .of(new LeaderboardEntryEntity("g-looter-2", 90),
-            new LeaderboardEntryEntity("g-looter-1", 100));
+        .of(new LeaderboardEntryEntity("g-looter-2", 90, board),
+            new LeaderboardEntryEntity("g-looter-1", 100, board));
     repository.saveAll(entities);
 
     List<LeaderboardEntryDto> leaderboard = service
