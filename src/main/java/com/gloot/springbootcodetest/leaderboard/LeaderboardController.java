@@ -17,6 +17,6 @@ public class LeaderboardController {
 
   @GetMapping
   public List<LeaderboardEntryDto> getLeaderboard() {
-    return service.getListOfAllLeaderboardEntriesAsDTO();
+    return service.getListOfDefaultLeaderboardEntriesAsDTO();
   }
 }

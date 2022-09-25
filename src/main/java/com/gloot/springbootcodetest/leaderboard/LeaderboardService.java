@@ -16,7 +16,7 @@ public class LeaderboardService {
 
 	private final LeaderboardRepository repository;
 
-	public List<LeaderboardEntryDto> getListOfAllLeaderboardEntriesAsDTO() {
+	public List<LeaderboardEntryDto> getListOfDefaultLeaderboardEntriesAsDTO() {
 		var position = new AtomicInteger(1);
 		return repository.findByLeaderboard_Name(DEFAULT_BOARD).stream()
 			.sorted((e1,e2) -> e2.getScore() - e1.getScore())
