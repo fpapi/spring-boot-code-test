@@ -25,7 +25,7 @@ public class LeaderboardServiceTest extends SpringBootComponentTest {
     repository.saveAll(entities);
 
     List<LeaderboardEntryDto> leaderboard = service
-        .getListOfAllLeaderboardEntriesAsDTO();
+        .getListOfDefaultLeaderboardEntriesAsDTO();
     assertEquals(entities.size(), leaderboard.size());
     // Verify ordering by score
     assertEqual(1, entities.get(1), leaderboard.get(0));
