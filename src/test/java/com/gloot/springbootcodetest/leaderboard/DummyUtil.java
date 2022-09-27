@@ -3,10 +3,20 @@ package com.gloot.springbootcodetest.leaderboard;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gloot.springbootcodetest.leaderboards.LeaderboardsEntryEntity;
 import com.gloot.springbootcodetest.leaderboards.LeaderboardsRepository;
 
 public final class DummyUtil {
+	
+	public static final String A_LEADERBOARD_NAME = "WORLD";
+	public static final String A_NICK = "BOB";
+	public static final int A_SCORE = 1000;
+	
+	public static <T> String objectAsJson(T input) throws JsonProcessingException {
+		return new ObjectMapper().writeValueAsString(input);
+	}
 	
 	public static List<LeaderboardEntryEntity> initLeaderboardWithNUsers(LeaderboardRepository leaderboardRepo, LeaderboardsRepository leaderboardsRepo, String name, int size) {
 		LeaderboardsEntryEntity board = leaderboardsRepo.findByName(name)
