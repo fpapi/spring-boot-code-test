@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class LeaderboardEntryEntity {
+public class LeaderboardEntryEntity implements WithNick {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private UUID uuid;

@@ -3,6 +3,7 @@ package com.gloot.springbootcodetest.leaderboard;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -10,17 +11,27 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.gloot.springbootcodetest.SpringBootComponentTest;
 import com.gloot.springbootcodetest.leaderboards.LeaderboardsRepository;
 
+import static com.gloot.springbootcodetest.leaderboard.DummyUtil.A_LEADERBOARD_NAME;
+import static com.gloot.springbootcodetest.leaderboard.DummyUtil.A_NICK;
+import static com.gloot.springbootcodetest.leaderboard.DummyUtil.A_SCORE;
+import static com.gloot.springbootcodetest.leaderboard.DummyUtil.objectAsJson;
+
 public class LeaderboardControllerTest extends SpringBootComponentTest {
 
+  private static final String API_V1_LEADERBOARD_NAME_USER_NICK = "/api/v1/leaderboard/{name}/user/{nick}";
+  
   @Autowired private MockMvc mockMvc;
   @Autowired LeaderboardRepository leaderboardRepo;
   @Autowired LeaderboardsRepository leaderboardsRepo;
 
+  /* GET LEADERBOARD */
+  
   @Test
   void givenADefaultLeaderboardWith1UserWhenGetTheDefaultLeaderboardThenReturnAnOk() throws Exception {
     // Given
@@ -38,9 +49,9 @@ public class LeaderboardControllerTest extends SpringBootComponentTest {
   @Test
   void givenALeaderboardWith1UserWhenGetTheLeaderboardThenReturnAnOk() throws Exception {
 	// Given
-	LeaderboardEntryEntity entity = initLeaderboardWith1Users("ALL_USER").get(0);
+	LeaderboardEntryEntity entity = initLeaderboardWith1Users(A_LEADERBOARD_NAME).get(0);
 	// When
-    var leaderboards = mockMvc.perform(get("/api/v1/leaderboard/ALL_USER"));
+    var leaderboards = mockMvc.perform(get("/api/v1/leaderboard/{name}", A_LEADERBOARD_NAME));
     // Then
     leaderboards
         .andExpect(status().isOk())
@@ -65,9 +76,9 @@ public class LeaderboardControllerTest extends SpringBootComponentTest {
   @Test
   void givenALeaderboardWith1UserWhenGetTheUserThenReturnAnOk() throws Exception {
 	// Given
-	LeaderboardEntryEntity entity = initLeaderboardWith1Users("SINGLE_USER").get(0);
+	LeaderboardEntryEntity entity = initLeaderboardWith1Users(A_LEADERBOARD_NAME).get(0);
 	// When
-    var user = mockMvc.perform(get("/api/v1/leaderboard/"+entity.getLeaderboard().getName()+"/user/"+entity.getNick()));
+    var user = mockMvc.perform(get(API_V1_LEADERBOARD_NAME_USER_NICK,entity.getLeaderboard().getName(),entity.getNick()));
 	// Then
     user
         .andExpect(status().isOk())
@@ -79,17 +90,78 @@ public class LeaderboardControllerTest extends SpringBootComponentTest {
   @Test
   void givenAnEmptyLeaderboardWhenGetAnUserThenReturnA404() throws Exception {
 	// Given
-	DummyUtil.initLeaderboardWithNUsers(leaderboardRepo, leaderboardsRepo, "NO_USER", 0);
+	DummyUtil.initLeaderboardWithNUsers(leaderboardRepo, leaderboardsRepo, A_LEADERBOARD_NAME, 0);
 	// When
-    var user = mockMvc.perform(get("/api/v1/leaderboard/NO_USER/user/a-user"));
+    var user = mockMvc.perform(get(API_V1_LEADERBOARD_NAME_USER_NICK,A_LEADERBOARD_NAME, A_NICK));
 	// Then
     user
         .andExpect(status().is(404))
         .andExpect(jsonPath("$.reason", is("Missing user with the requested nickname")));
   }
   
-	private List<LeaderboardEntryEntity> initLeaderboardWith1Users(String name) {
-		return DummyUtil.initLeaderboardWithNUsers(leaderboardRepo, leaderboardsRepo, name, 1);
-	}
+  /* PUT LEADERBOARD */
+  
+  @Test
+  void givenNoLeaderboardWhenPutAnUserThenCreateBothBoardAndUserAndReturnCreated() throws Exception {
+	// Given
+	
+	// When
+    var response = mockMvc.perform(put(API_V1_LEADERBOARD_NAME_USER_NICK,A_LEADERBOARD_NAME, A_NICK)
+    							.contentType(MediaType.APPLICATION_JSON)
+    							.content(objectAsJson(new LeaderboardNewEntryDto(A_SCORE))));
+	// Then
+    response.andExpect(status().is(201));
+    var user = mockMvc.perform(get(API_V1_LEADERBOARD_NAME_USER_NICK,A_LEADERBOARD_NAME, A_NICK));
+    user
+	    .andExpect(status().isOk())
+	    .andExpect(jsonPath("$.position", is(1)))
+	    .andExpect(jsonPath("$.nick", is(A_NICK)))
+	    .andExpect(jsonPath("$.score", is(A_SCORE)));
+  }
+  
+  @Test
+  void givenAnEmptyLeaderboardWhenPutAnUserThenCreateUserScoreAndReturnCreated() throws Exception {
+	// Given
+	DummyUtil.initLeaderboardWithNUsers(leaderboardRepo, leaderboardsRepo, A_LEADERBOARD_NAME, 0);
+
+	// When
+    var response = mockMvc.perform(put(API_V1_LEADERBOARD_NAME_USER_NICK,A_LEADERBOARD_NAME, A_NICK)
+    							.contentType(MediaType.APPLICATION_JSON)
+    							.content(objectAsJson(new LeaderboardNewEntryDto(A_SCORE))));
+	// Then
+    response.andExpect(status().is(201));
+    var user = mockMvc.perform(get(API_V1_LEADERBOARD_NAME_USER_NICK,A_LEADERBOARD_NAME, A_NICK));
+    user
+	    .andExpect(status().isOk())
+	    .andExpect(jsonPath("$.position", is(1)))
+	    .andExpect(jsonPath("$.nick", is(A_NICK)))
+	    .andExpect(jsonPath("$.score", is(A_SCORE)));
+  }
+  
+  @Test
+  void givenALeaderboardWhenPutANewUserThenUpdateTheUserScoreAndReturnCreated() throws Exception {
+	// Given
+	DummyUtil.initLeaderboardWithNUsers(leaderboardRepo, leaderboardsRepo, A_LEADERBOARD_NAME, 0);
+	mockMvc.perform(put(API_V1_LEADERBOARD_NAME_USER_NICK,A_LEADERBOARD_NAME, A_NICK)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(objectAsJson(new LeaderboardNewEntryDto(0))));
+	// When
+    var response = mockMvc.perform(put(API_V1_LEADERBOARD_NAME_USER_NICK,A_LEADERBOARD_NAME, A_NICK)
+    							.contentType(MediaType.APPLICATION_JSON)
+    							.content(objectAsJson(new LeaderboardNewEntryDto(A_SCORE))));
+	// Then
+    response.andExpect(status().is(201));
+    var user = mockMvc.perform(get(API_V1_LEADERBOARD_NAME_USER_NICK,A_LEADERBOARD_NAME, A_NICK));
+    user
+	    .andExpect(status().isOk())
+	    .andExpect(jsonPath("$.position", is(1)))
+	    .andExpect(jsonPath("$.nick", is(A_NICK)))
+	    .andExpect(jsonPath("$.score", is(A_SCORE)));
+  }
+  
+  
+  private List<LeaderboardEntryEntity> initLeaderboardWith1Users(String name) {
+	return DummyUtil.initLeaderboardWithNUsers(leaderboardRepo, leaderboardsRepo, name, 1);
+  }
 	
 }

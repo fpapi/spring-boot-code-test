@@ -9,4 +9,6 @@ INSERT INTO leaderboards(name) VALUES ('DEFAULT');
 
 UPDATE leaderboard SET board_id = (SELECT uuid FROM leaderboards WHERE name = 'DEFAULT');
 
-alter table leaderboard alter column board_id UUID NOT NULL;
+ALTER TABLE leaderboard ALTER COLUMN board_id UUID NOT NULL;
+
+ALTER TABLE leaderboard ADD UNIQUE(board_id, nick);
